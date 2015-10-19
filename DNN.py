@@ -7,6 +7,7 @@ from itertools import izip
 from copy import deepcopy
 import pdb
 import sys
+import csv
 
 
 class DNN:
@@ -108,24 +109,27 @@ class DNN:
 		#print "Cost is : %f " % self.train_f(batch, raw_batch_y)
 		return self.train_f(batch, raw_batch_y)
 
-	def report_err_rate(self, batch, label):
+	def report_err_rate(self, raw_batch_x, output):
 		max_batch_position = []
-		label_dict = label #dict(name of label) = [array of phones]
+		label_dict = self.__label #dict(name of label) = [array of phones]
+		print "The Id is:",raw_batch_x[1][0]
+		print "The Label is :" ,label_dict[raw_batch_x[1][0]].index(1)
+		print "The Most  is :" ,max((self.transpose(output))[1])
 		correct = 0
-		for i in range(len(self.__y_out)):
-			max_y_dnn_position = self.__y_out[i].index(max(self.__y_out[i]))
-			if(label_dict(batch[i][0]).index(1) == max_y_dnn_position):
+		for i in range(len(output)):
+			max_y_dnn_position = output[i][max(output[i])]
+			if(label_dict[raw_batch_x[i][0]].index(1) == max_y_dnn_position):
 				correct += 1
-		return correct / len(self.__y_out)
+		return correct / self.BATCH_SIZE
 		
-	def output_csv(self,path,batch,label):
-		for i in range(len(self.__y_out)):
-			with open(path,'w') as csvfile:
+	def output_csv(self,raw_batch_x,output):
+		for i in range(len(ouptut)):
+			with open(path,'a') as csvfile:
 				fieldnames = ["Id","Prediction"]
 				writer=csv.DictWriter(csvfile,fieldnames=fieldnames)
-				writer.writeheader()
-				writer.writerow({"Id": self.__id[__y_out[i]],\
-					             "Prediction": self.__indexphone[__y__dnn[i]]})
+				#writer.writeheader()
+				writer.writerow({"Id": raw_batch_x[i][0],\
+					             "Prediction": self.__indexphone[max(output[i])]})
 
 	def output_prediction(self):
 		pass

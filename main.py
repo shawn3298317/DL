@@ -11,13 +11,13 @@ def my_print(i,cost):
 def main():
 	batch = Batch.Batch()
 	dnn = DNN.DNN()
-
+	test_data = batch.readfile("fbank/try.ark")
 	train_data = batch.readfile("fbank/train.ark")        #all the training data
 	batch.readlabel("label/train.lab")
 	batch.phoneindex(48)
 	x_batches, y_batches = batch.mk_batch(train_data, 128) #transform data into minibatch
-	
-	MAX_EPOCH = 5
+	x_batches_test,y_batches_test = batch.mk_batch(test_data,128)
+	MAX_EPOCH = 1
 
 	"""training"""
 	epoch = 0
@@ -26,7 +26,7 @@ def main():
 		#for i in range(10):
 		for i in range(len(x_batches)):
 			assert (len(x_batches[i]) == len(y_batches[i])),"X batches and Y batches length unmatch!"
-			#print "Batch ", batch_cnt
+			print "Batch ", batch_cnt
 			#pdb.set_trace()
 			#print train_batch
 			#dnn.feedforward(x_batches[i], y_batches[i])
@@ -45,11 +45,16 @@ def main():
 	"""testing for the training result"""
 	#test_data = batch.readfile("../fbank/test.ark") #all the test data
 	#test_batches = batch.minibatch(train_data, 10)   #transform data into minibatch
-
-	#for test_batch in test_batches:
-	#	dnn.feedforward(test_batch)
-	#	dnn.output_prediction()
-
+	batch_cnt=0	
+	for i in range (len(x_batches_test)):
+		print "Batch_test",batch_cnt
+		output = dnn.test(x_batches_test[i],y_batches_test[i])
+		#print "index of output",len(output)
+		#print "length of output",len(output[0])
+		#print output
+		##print "The Error rate ",dnn.report_err_rate(x_batchse_test[i],output)
+		dnn.output_csv(x_batches_test[i],output)		
+		batch_cnt+=1
 
 if __name__ == '__main__':
 	main()
