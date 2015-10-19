@@ -12,6 +12,7 @@ class Batch :
 	def __init__(self) :
 		self.__input_x = []
 		self.__y_hat = []
+		self.__batch_index = []
 		self.__labels = dict()
 		self.__batches = []
 		self.__phoneindex = dict()
@@ -29,31 +30,41 @@ class Batch :
 				self.__input_x.append(line_x)
 		return self.__input_x
 
-	def mk_batch(self, input_x, batch_size) :
+	def mk_batch(self, input_x, batch_size, cmd) :
 		"""
 		return batches with demanded batch_size
 		ex. batehes[0] = [ input_x[0] : input[0 + batch_size] ]
 		"""
 		random.shuffle(input_x)
 		y_hat_list = []
+		label_index = []
 		if(len(input_x) % batch_size) == 0 : 
 			for i in range(len(input_x) / batch_size) :
 				self.__batches.append(input_x[batch_size*i : (i+1)*batch_size])
 				for j in range(batch_size) :
-					#print(batch_size*i+j)
 					y_hat_list.append(self.__labels[input_x[batch_size*i + j][0]])
+					label_index.append(self.__labels[input_x[batch_size*i + j][0]].index(1))
 				self.__y_hat.append(y_hat_list)
+				self.__batch_index.append(label_index)
 				y_hat_list = []
+				label_index = []
 		else :
 			input_x = input_x + random.sample(input_x, len(input_x) % batch_size)
 			for i in range(len(input_x) / batch_size) :
 				self.__batches.append(input_x[batch_size*i: (i+1)*batch_size])
 				for j in range(batch_size) :
 					y_hat_list.append(self.__labels[input_x[batch_size*i + j][0]])
+					label_index.append(self.__labels[input_x[batch_size*i + j][0]].index(1))
 				self.__y_hat.append(y_hat_list)
+				self.__batch_index.append(label_index)
 				y_hat_list = []
+				label_index = []
+		if cmd == 0 : 
+			return self.__batches, self.__y_hat
+		elif cmd == 1 :
+			return self.__batches, self.__y_hat, self.__batch_index
 
-		return self.__batches, self.__y_hat
+		return self.__batches, self.__y_hat, self.__batch_index
 		
 	def readlabel(self, filename) :
 		"""
@@ -106,6 +117,7 @@ class Batch :
 	   	 			self.__phoneindex[phone[0]].insert(i, 1)
 				i += 1
 		return self.__phoneindex
+
 
 
 
