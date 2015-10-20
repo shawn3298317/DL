@@ -35,6 +35,9 @@ class Batch :
 		return batches with demanded batch_size
 		ex. batehes[0] = [ input_x[0] : input[0 + batch_size] ]
 		"""
+		self.__batches = []
+		self.__y_hat = []
+		self.__batch_index = []
 		random.shuffle(input_x)
 		y_hat_list = []
 		label_index = []

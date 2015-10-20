@@ -23,17 +23,11 @@ def main():
 	# Generating validation set
 	
 	valid_data = batch.readfile("fbank/valid.ark")
-	#batch.readlabel("label/train.lab")
 	x_valid_batches, y_valid_batches, y_idx_list = batch.mk_batch(valid_data, 128, 1)
 
-	#print y_idx_list
-	
-
-	#print y_idx_list
-
-	#print x_valid_batches[0]
-
-	MAX_EPOCH = 5
+	print "x_batch",len(x_valid_batches),len(x_valid_batches[0])
+	print "y_list",len(y_idx_list),len(y_idx_list[0])
+	MAX_EPOCH = 10
 
 
 
@@ -42,28 +36,55 @@ def main():
 	epoch = 0
 	while(epoch < MAX_EPOCH):
 		batch_cnt = 0
-		#for i in range(10):
-		for i in range(len(x_batches)):
+
+		over_all_cost = 0.0
+		for i in range(len(x_batches)):#range(2):
 			assert (len(x_batches[i]) == len(y_batches[i])),"X batches and Y batches length unmatch!"
-			print "Batch ", batch_cnt
+			#print "Batch ", batch_cnt
 			#pdb.set_trace()
 			#print train_batch
 			#dnn.feedforward(x_batches[i], y_batches[i])
-			cost = dnn.train(x_batches[i], y_batches[i])
-			print cost
-			#my_print(i,cost)
-			#print "a batch down"
-			#dnn.calculate_error()
-			#dnn.backpropagation()
-			#dnn.update()
+			w0,w1,b0,b1,a0,y,cost = dnn.train(x_batches[i], y_batches[i])
+			over_all_cost += cost
+			my_print(i,cost)
+			#print "Batch %i Cost: %f" % (batch_cnt, cost)
+			'''
+			print "=====W0====="
+			print "w0 length", len(w0), len(w0[0])
+			print w0
+			print "============"
+			print "=====W1====="
+			print w1
+			print "============"
+			print "=====B0====="
+			print b0
+			print "============"
+			print "=====B1====="
+			print b1
+			print "============"
+			print "=====A0====="
+			print a0
+			print "============"
+			print "Y hat length",len(y_batches[0]),len(y_batches[0][0])
+			print "=====Y====="
+			print "Y length:",len(y),len(y[0])
+			print y
+			print "============"
+			'''
+
+			#print cost
+			
 			batch_cnt += 1
 		epoch += 1
+		print "\nEpoch %i Average_Cost: %f" % (epoch, over_all_cost/len(x_batches))
 		
-		
+		over_all_acc = 0.0
 		for i in range(len(x_valid_batches)):
-			err_rate = dnn.validate(x_valid_batches[i], y_idx_list)
-			print "Epoch %i , Error rate: %f \n" % (epoch,err_rate)
-		
+			err_rate = dnn.validate(x_valid_batches[i], y_idx_list[i])
+			#print "Epoch %i , ACC: %f \n" % (epoch,err_rate)
+			over_all_acc += err_rate
+
+		print "Epoch %i ACC: %f" % (epoch, over_all_acc/len(x_valid_batches))
 	
 	print("finish")
 
@@ -72,6 +93,7 @@ def main():
 	"""testing for the training result"""
 	#test_data = batch.readfile("../fbank/test.ark") #all the test data
 	#test_batches = batch.minibatch(train_data, 10)   #transform data into minibatch
+	'''
 	batch_cnt=0	
 	for i in range (len(x_batches_test)):
 		print "Batch_test",batch_cnt
@@ -82,6 +104,7 @@ def main():
 		##print "The Error rate ",dnn.report_err_rate(x_batchse_test[i],output)
 		dnn.output_csv(x_batches_test[i],output)		
 		batch_cnt+=1
+	'''
 
 if __name__ == '__main__':
 	main()

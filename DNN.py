@@ -62,6 +62,10 @@ class DNN:
 			else:
 				w = theano.shared( numpy.asarray(numpy.random.randn(DNN.LAYER_WIDTH, DNN.INPUT_WIDTH)) )
 				b = theano.shared( numpy.asarray(numpy.random.randn(DNN.LAYER_WIDTH)) )
+				#print "WWWWW"
+				#print w.get_value()
+				#print "BBBB"
+				#print b.get_value()
 			
 			if (i == 0):
 				z = T.dot(w, self.__x_in.T) + b.dimshuffle(0,'x')
@@ -119,7 +123,7 @@ class DNN:
 		self.train_f = theano.function(
 			inputs  = [self.__x_in , self.__y_hat],
 			updates = self.myUpdate(self.parameters, self.gradients),
-			outputs = self.__y_out)
+			outputs = [self.W_matrix[0],self.W_matrix[1],self.B_matrix[0],self.B_matrix[1],self.A_matrix[0].T,self.__y_out.T,self.cost])
 		
 		# Validating function
 		self.valid_f = theano.function(
@@ -136,8 +140,13 @@ class DNN:
 		batch = self.parse_batch(valid_x, valid_y)
 
 		y_out = self.valid_f(batch)
-
-		
+		'''
+		print "=====yOUT======="
+		print y_out.shape
+		print y_out
+		print "================"
+		'''
+		correct = 0.0
 		#print y_out[0]
 		#print "shape",len(y_out),",",len(y_out[0])
 		predict = []
@@ -150,15 +159,16 @@ class DNN:
 					idx = j
 			predict.append(idx)
 
-		print predict
+		#print predict
+		#print valid_y
 		#valid_result = self.getIndex(self.valid_f(batch)) # result index list
 
 		for i in range(DNN.BATCH_SIZE):
 			if ( valid_y[i] == predict[i]):
-				self.correct += 1
+				correct += 1
 
-		err_rate = (self.correct/DNN.BATCH_SIZE)
-		self.correct = 0
+		err_rate = (correct/128.0)
+		
 
 		return err_rate
 
