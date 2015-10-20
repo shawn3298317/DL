@@ -2,6 +2,8 @@ import DNN
 import Batch
 import pdb
 import time
+import numpy
+import theano
 import sys
 
 def my_print(i,cost):
@@ -27,7 +29,7 @@ def main():
 
 	print "x_batch",len(x_valid_batches),len(x_valid_batches[0])
 	print "y_list",len(y_idx_list),len(y_idx_list[0])
-	MAX_EPOCH = 10
+	MAX_EPOCH = 100
 
 
 
@@ -40,13 +42,34 @@ def main():
 		over_all_cost = 0.0
 		for i in range(len(x_batches)):#range(2):
 			assert (len(x_batches[i]) == len(y_batches[i])),"X batches and Y batches length unmatch!"
-			#print "Batch ", batch_cnt
+			
 			#pdb.set_trace()
 			#print train_batch
 			#dnn.feedforward(x_batches[i], y_batches[i])
 			w0,w1,b0,b1,a0,y,cost = dnn.train(x_batches[i], y_batches[i])
+			if(i == 0):
+				print "Cost0 :",cost
 			over_all_cost += cost
-			my_print(i,cost)
+
+			'''
+			if(i == 0):
+				print "=====Y====="
+				print "Y length:",len(y),len(y[0]),type(y)
+				numpy.set_printoptions(formatter = {'float': '{: 0.3f}'.format})
+				numpy.set_printoptions(threshold = 'nan')
+				print(y)
+				print "Here comes minus"
+				print(y - y_batches[i])
+				print "============"
+			'''
+			#print x_batches[i][0][:4], x_batches[i][1][0]
+			#print y_batches[i][0][:4], y_batches[i][1][:4]
+			#print "Batch ", batch_cnt ,"/",len(x_batches),"  Cost : ",cost
+			#print "=====W1====="
+			#print "w1 length", len(w1), len(w1[0])
+			#print w1
+			#print "============"
+			#my_print(i,cost)
 			#print "Batch %i Cost: %f" % (batch_cnt, cost)
 			'''
 			print "=====W0====="
@@ -82,6 +105,7 @@ def main():
 		for i in range(len(x_valid_batches)):
 			err_rate = dnn.validate(x_valid_batches[i], y_idx_list[i])
 			#print "Epoch %i , ACC: %f \n" % (epoch,err_rate)
+			#print "Val_Batch %i / %i ACC: %f" % (i,len(x_valid_batches),err_rate)
 			over_all_acc += err_rate
 
 		print "Epoch %i ACC: %f" % (epoch, over_all_acc/len(x_valid_batches))

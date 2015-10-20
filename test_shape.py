@@ -12,10 +12,11 @@ print arr_2.shape
 
 x = T.scalar()
 mult = T.dot(arr_1,arr_2)
+minus = arr_1 - arr_2
 
-func = theano.function([arr_1,arr_2], mult)
+func = theano.function([arr_1,arr_2], minus)
 
 a1 = numpy.asarray([[1,2,3],[3,2,1]])
-a2 = numpy.asarray([1,2,3])
+a2 = numpy.asarray([[1,2,3]])
 
 print func(a2,a1)

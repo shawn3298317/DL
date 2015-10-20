@@ -25,20 +25,20 @@ class DNN:
 		#self.__x_in = []
 		#self.__y_hat = []  #label, target
 		#self.__y_out = []  #output
-		self.__indexphone = dict()
-		self.correct = 0
+		#self.__indexphone = dict()
 		#self.__parameters=[]
 		#self.__gradients=[]
 		#self.__batch = []
-		b = B.Batch()
-		self.__label = b.readlabel("label/train.lab") #set the path for the file
-		self.__indexphone = b.indexphone
+		#b = B.Batch()
+		#self.__label = b.readlabel("label/train.lab") #set the path for the file
+		#self.__indexphone = b.indexphone
 		#Function model
 		self.init_model(layer)
 
-
-		#print self.W_matrix[0].get_value()
-		#print self.W_matrix[1].get_value()
+		#numpy.set_printoptions(formatter = {'float': '{: 0.3f}'.format}, threshold = 'nan')
+		#print(self.W_matrix[0].get_value())
+		#numpy.set_printoptions(formatter = {'float': '{: 0.3f}'.format}, threshold = 'nan')
+		#print(self.W_matrix[1].get_value())
 
 	def parse_batch(self, raw_x, raw_y):
 		rett = []
@@ -47,56 +47,6 @@ class DNN:
 			rett.append(raw_x[i][1:])
 
 		return rett
-
-	
-
-
-	def add_layer(self, layer_cnt):
-
-		self.__x_in = T.matrix() #input
-
-		for i in range(layer_cnt+1):
-			if (i == layer_cnt):
-				w = theano.shared( numpy.asarray(numpy.random.randn(DNN.OUTPUT_WIDTH, DNN.LAYER_WIDTH)) )
-				b = theano.shared( numpy.asarray(numpy.random.randn(DNN.OUTPUT_WIDTH)) )
-			else:
-				w = theano.shared( numpy.asarray(numpy.random.randn(DNN.LAYER_WIDTH, DNN.INPUT_WIDTH)) )
-				b = theano.shared( numpy.asarray(numpy.random.randn(DNN.LAYER_WIDTH)) )
-				#print "WWWWW"
-				#print w.get_value()
-				#print "BBBB"
-				#print b.get_value()
-			
-			if (i == 0):
-				z = T.dot(w, self.__x_in.T) + b.dimshuffle(0,'x')
-			else: 
-				z = T.dot(w, self.A_matrix[-1]) + b.dimshuffle(0,'x')
-
-			a = 1/(1 + T.exp(-z))
-			#a = T.switch(z < 0, 0, z) # ReLU function
-			#print w.get_value()
-			self.W_matrix.append(w)
-			self.B_matrix.append(b)
-			self.Z_matrix.append(z)
-			self.A_matrix.append(a)
-
-		#self.__y_out = T.switch(self.Z_matrix[-1] < 0, 0, self.Z_matrix[-1]) #output
-		self.__y_out = 1/(1 + T.exp(-self.Z_matrix[-1]))
-
-		#theano.function(inputs = [self.__x_in], outputs = self.__y_out)
-
-
-	def myUpdate(self,parameters,gradients):
-		print "MyUpdate Called.....!!!!!!"
-		parameters_updates = [(p, p - DNN.LEARNING_RATE * g) for p, g in izip(parameters, gradients)]
-		return parameters_updates
-
-
-	def train(self, raw_batch_x, raw_batch_y):
-		batch = self.parse_batch(raw_batch_x, raw_batch_y)
-		#print "Cost is : %f " % self.train_f(batch, raw_batch_y)
-		
-		return self.train_f(batch, raw_batch_y)
 
 	def init_model(self, layer): # default 1 hidden layer
 
@@ -112,23 +62,28 @@ class DNN:
 		#self.parameters = [self.w1, self.w2, self.b1, self.b2]
 
 		self.__y_hat = T.matrix()
-		self.cost  = T.sum( (self.__y_out.T - self.__y_hat) ** 2 ) / DNN.BATCH_SIZE
+		self.cost  = T.sum( (self.A_matrix[-1].T - self.__y_hat) ** 2 ) / DNN.BATCH_SIZE
 		self.gradients = T.grad(self.cost, self.parameters)
-
+		#print type(self.gradients), type(self.gradients[0])
+		#print "len",len(self.gradients)
 		#print type(self.W_matrix[0])
 		#print type(self.gradients)
 		#print type(self.gradients[0])
 
+
+
 		# Training function
 		self.train_f = theano.function(
-			inputs  = [self.__x_in , self.__y_hat],
+			inputs = [self.__x_in , self.__y_hat],
 			updates = self.myUpdate(self.parameters, self.gradients),
-			outputs = [self.W_matrix[0],self.W_matrix[1],self.B_matrix[0],self.B_matrix[1],self.A_matrix[0].T,self.__y_out.T,self.cost])
+			#allow_input_downcast = True,
+			outputs = [self.Z_matrix[0],self.Z_matrix[1],self.B_matrix[0],self.B_matrix[1],self.A_matrix[0].T,self.A_matrix[-1].T,self.cost])
 		
 		# Validating function
 		self.valid_f = theano.function(
 			inputs  = [self.__x_in],
-			outputs = self.__y_out.T)
+			#allow_input_downcast = True,
+			outputs = self.A_matrix[-1].T)
 
 		# Testing function
 		#self.test_f = theano.function(
@@ -136,43 +91,97 @@ class DNN:
 		#	outputs = self.__y_out) 
 
 
+
+	def add_layer(self, layer_cnt):
+
+		self.__x_in = T.matrix() #input
+
+
+
+		for i in range(layer_cnt+1):
+			if (i == layer_cnt):
+				#w = theano.shared( numpy.asarray(numpy.random.randn(DNN.OUTPUT_WIDTH, DNN.LAYER_WIDTH)) )
+				#b = theano.shared( numpy.asarray(numpy.random.randn(DNN.OUTPUT_WIDTH)) )
+				w = theano.shared( numpy.random.uniform(low = -0.1, high = 0.1, size = (DNN.OUTPUT_WIDTH, DNN.LAYER_WIDTH)) )
+				b = theano.shared( numpy.random.uniform(low = -0.1, high = 0.1, size =  DNN.OUTPUT_WIDTH) )
+			else:
+				#w = theano.shared( numpy.asarray(numpy.random.randn(DNN.LAYER_WIDTH, DNN.INPUT_WIDTH)) )
+				#b = theano.shared( numpy.asarray(numpy.random.randn(DNN.LAYER_WIDTH)) )
+				w = theano.shared( numpy.random.uniform(low = -0.1, high = 0.1, size = (DNN.LAYER_WIDTH, DNN.INPUT_WIDTH)) )
+				b = theano.shared( numpy.random.uniform(low = -0.1, high = 0.1, size =  DNN.LAYER_WIDTH) )
+			self.W_matrix.append(w)
+			self.B_matrix.append(b)
+
+		for i in range(layer_cnt +1):
+			if (i == 0):
+				z = T.dot(self.W_matrix[i], self.__x_in.T) + self.B_matrix[i].dimshuffle(0,'x')
+			else: 
+				z = T.dot(self.W_matrix[i], self.A_matrix[i-1]) + self.B_matrix[i].dimshuffle(0,'x')
+
+			a = 1/(1 + T.exp(-z))
+			#a = T.switch(z < 0, 0, z) # ReLU function
+			self.Z_matrix.append(z)
+			self.A_matrix.append(a)
+			
+			#print w.get_value()
+
+			
+			
+
+		#self.__y_out = T.switch(self.Z_matrix[-1] < 0, 0, self.Z_matrix[-1]) #output
+		#self.__y_out = 1/(1 + T.exp(-self.Z_matrix[-1]))
+
+		#theano.function(inputs = [self.__x_in], outputs = self.__y_out)
+
+
+	def myUpdate(self,parameters,gradients):
+		print "MyUpdate Called.....!!!!!!"
+		parameters_updates = [(p, p - DNN.LEARNING_RATE * g) for p, g in izip(parameters, gradients)]
+
+		#print type(parameters_updates)
+		return parameters_updates
+
+
+	def train(self, raw_batch_x, raw_batch_y):
+		batch = self.parse_batch(raw_batch_x, raw_batch_y)
+		#print "Cost is : %f " % self.train_f(batch, raw_batch_y)
+		
+		return self.train_f(batch, raw_batch_y)
+
+	
+
+
 	def validate(self, valid_x, valid_y):
 		batch = self.parse_batch(valid_x, valid_y)
 
-		y_out = self.valid_f(batch)
-		'''
-		print "=====yOUT======="
-		print y_out.shape
-		print y_out
-		print "================"
-		'''
+		y_out = self.valid_f(numpy.asarray(batch))
+
 		correct = 0.0
 		#print y_out[0]
 		#print "shape",len(y_out),",",len(y_out[0])
 		predict = []
 		for i in range(DNN.BATCH_SIZE):
-			maximum = 0
-			idx = -1
-			for j in range(DNN.OUTPUT_WIDTH):
-				if (y_out[i][j] > maximum ):
-					maximum = y_out[i][j]
-					idx = j
-			predict.append(idx)
+			index = numpy.argmax(y_out[i])
+			if (index == valid_y[i]):
+				correct += 1
+			predict.append(index)
 
-		#print predict
+
+		print predict[-9:],valid_y[-9:]
+		
+		#print y_out[1]
+		#print y_out[2]
+		#print y_out[3]
 		#print valid_y
 		#valid_result = self.getIndex(self.valid_f(batch)) # result index list
 
-		for i in range(DNN.BATCH_SIZE):
-			if ( valid_y[i] == predict[i]):
-				correct += 1
-
-		err_rate = (correct/128.0)
+		err_rate = (correct/DNN.BATCH_SIZE)
 		
 
 		return err_rate
 
 
+	'''
 	def report_err_rate(self, raw_batch_x, output):
 		max_batch_position = []
 		label_dict = self.__label #dict(name of label) = [array of phones]
@@ -197,7 +206,7 @@ class DNN:
 
 	def output_prediction(self):
 		pass
-
+	'''
 	"""
 	helper function
 	"""

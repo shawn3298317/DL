@@ -23,6 +23,7 @@ class Batch :
 		parsing ark file into a set input_x
 		ex. input_x[0] = [ [fadg0_si1279_1], [2.961075, 3.239631, 3.580493, 4.219409, ...] ]
 		"""
+		self.__input_x = []
 		with open (filename, 'r') as f :
 			for line in f :
 				words = line.split()
