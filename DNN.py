@@ -119,7 +119,7 @@ class DNN:
 		self.train_f = theano.function(
 			inputs  = [self.__x_in , self.__y_hat],
 			updates = self.myUpdate(self.parameters, self.gradients),
-			outputs = self.cost)
+			outputs = self.__y_out)
 		
 		# Validating function
 		self.valid_f = theano.function(

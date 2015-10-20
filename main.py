@@ -29,11 +29,6 @@ def main():
 	#print y_idx_list
 	
 
-	
-	valid_data = batch.readfile("fbank/valid.ark")
-	#batch.readlabel("label/train.lab")
-	x_valid_batches, y_valid_batches, y_idx_list = batch.mk_batch(valid_data, 128, 1)
-
 	#print y_idx_list
 
 	#print x_valid_batches[0]
