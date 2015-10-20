@@ -17,14 +17,14 @@ def main():
 
 	# Generating training batch
 	
-	train_data = batch.readfile("fbank/train.ark")        #all the training data
-	batch.readlabel("label/train.lab")
+	train_data = batch.readfile("../fbank/train.ark")        #all the training data
+	batch.readlabel("../label/train.lab")
 	batch.phoneindex(48)
 	x_batches, y_batches = batch.mk_batch(train_data, 128, 0) #transform data into minibatch
 	
 	# Generating validation set
 	
-	valid_data = batch.readfile("fbank/valid.ark")
+	valid_data = batch.readfile("../fbank/valid.ark")
 	x_valid_batches, y_valid_batches, y_idx_list = batch.mk_batch(valid_data, 128, 1)
 
 	print "x_batch",len(x_valid_batches),len(x_valid_batches[0])

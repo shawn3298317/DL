@@ -19,6 +19,7 @@ class DNN:
 	OUTPUT_WIDTH = 48
 	LAYER_WIDTH = 128
 	INPUT_WIDTH = 69
+	MOMENTUM = 0.9
 	
 
 	def __init__(self, layer=1):
@@ -62,20 +63,24 @@ class DNN:
 		#self.parameters = [self.w1, self.w2, self.b1, self.b2]
 
 		self.__y_hat = T.matrix()
-		self.cost  = T.sum( (self.A_matrix[-1].T - self.__y_hat) ** 2 ) / DNN.BATCH_SIZE
+		self.__y_softmax = T.exp(self.A_matrix[-1].T) / T.sum( T.exp(self.A_matrix[-1]), axis = 1 )
+		self.cost = T.sum( (self.__y_hat * -T.log(self.__y_softmax)) ) / DNN.BATCH_SIZE
 		self.gradients = T.grad(self.cost, self.parameters)
 		#print type(self.gradients), type(self.gradients[0])
 		#print "len",len(self.gradients)
 		#print type(self.W_matrix[0])
 		#print type(self.gradients)
 		#print type(self.gradients[0])
+		self.movement = []
+		for p in self.parameters :
+			self.movement.append( theano.shared( numpy.asarray( numpy.zeros(p.get_value().shape) )))
 
 
 
 		# Training function
 		self.train_f = theano.function(
 			inputs = [self.__x_in , self.__y_hat],
-			updates = self.myUpdate(self.parameters, self.gradients),
+			updates = self.myUpdate(self.parameters, self.gradients, self.movement),
 			#allow_input_downcast = True,
 			outputs = [self.Z_matrix[0],self.Z_matrix[1],self.B_matrix[0],self.B_matrix[1],self.A_matrix[0].T,self.A_matrix[-1].T,self.cost])
 		
@@ -134,10 +139,10 @@ class DNN:
 		#theano.function(inputs = [self.__x_in], outputs = self.__y_out)
 
 
-	def myUpdate(self,parameters,gradients):
+	def myUpdate(self, parameters, gradients, movement):
 		print "MyUpdate Called.....!!!!!!"
-		parameters_updates = [(p, p - DNN.LEARNING_RATE * g) for p, g in izip(parameters, gradients)]
-
+		parameters_updates = [(p, p - 0.001 * g + DNN.MOMENTUM * v) for p, g, v in izip(parameters, gradients, movement)]
+		parameters_updates+= [(v, DNN.MOMENTUM * v) for v in movement]
 		#print type(parameters_updates)
 		return parameters_updates
 
