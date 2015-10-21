@@ -1,12 +1,12 @@
 import random
-'''
+"""
 ussage :
 b = Batch()
 c = b.readfile("train.ark")
 b.readlabel("train.lab", 48)
 b.phoneindex(48)
 d = b.mk_batch(c, 5)
-'''
+"""
 class Batch :
 
 	def __init__(self) :
@@ -33,41 +33,73 @@ class Batch :
 	def mk_batch(self, input_x, batch_size, cmd) :
 		"""
 		return batches with demanded batch_size
-		ex. batehes[0] = [ input_x[0] : input[0 + batch_size] ]
+		ex. batches[0] = [ input_x[0] : input[0 + batch_size] ]
 		"""
 		self.__batches = []
 		self.__y_hat = []
 		self.__batch_index = []
 		random.shuffle(input_x)
-		y_hat_list = []
-		label_index = []
 		if(len(input_x) % batch_size) == 0 : 
 			for i in range(len(input_x) / batch_size) :
-				self.__batches.append(input_x[batch_size*i : (i+1)*batch_size])
-				for j in range(batch_size) :
-					y_hat_list.append(self.__labels[input_x[batch_size*i + j][0]])
-					label_index.append(self.__labels[input_x[batch_size*i + j][0]].index(1))
-				self.__y_hat.append(y_hat_list)
-				self.__batch_index.append(label_index)
+				batch = []
 				y_hat_list = []
 				label_index = []
+				for j in range(batch_size) :
+					batch.append(input_x[batch_size*i + j])
+					y_hat_list.append(self.__labels[input_x[batch_size*i + j][0]])
+					label_index.append(self.__labels[input_x[batch_size*i + j][0]].index(1))
+				self.__batches.append(batch)
+				self.__y_hat.append(y_hat_list)
+				self.__batch_index.append(label_index)
+				
 		else :
 			input_x = input_x + random.sample(input_x, len(input_x) % batch_size)
 			for i in range(len(input_x) / batch_size) :
-				self.__batches.append(input_x[batch_size*i: (i+1)*batch_size])
-				for j in range(batch_size) :
-					y_hat_list.append(self.__labels[input_x[batch_size*i + j][0]])
-					label_index.append(self.__labels[input_x[batch_size*i + j][0]].index(1))
-				self.__y_hat.append(y_hat_list)
-				self.__batch_index.append(label_index)
+				batch = []
 				y_hat_list = []
 				label_index = []
+				for j in range(batch_size) :
+					batch.append(input_x[batch_size*i + j])
+					y_hat_list.append(self.__labels[input_x[batch_size*i + j][0]])
+					label_index.append(self.__labels[input_x[batch_size*i + j][0]].index(1))
+				self.__batches.append(batch)
+				self.__y_hat.append(y_hat_list)
+				self.__batch_index.append(label_index)
+				
 		if cmd == 0 : 
 			return self.__batches, self.__y_hat
 		elif cmd == 1 :
 			return self.__batches, self.__y_hat, self.__batch_index
 
 		return self.__batches, self.__y_hat, self.__batch_index
+
+	def mk_test_batch(self, input_x, batch_size) :
+		self.__batches = []
+
+		if(len(input_x) % batch_size) == 0: 
+			for i in range(len(input_x) / batch_size):
+				batch = []
+				for j in range(batch_size):
+					batch.append(input_x[batch_size*i + j])
+				self.__batches.append(batch)
+		else :
+			q = len(input_x) / batch_size
+			for i in range(q + 1):
+				#print "i = ", i
+				#print "q = ", q
+				batch = []
+				if(i == q):
+					b_size = len(input_x) % batch_size
+					#print "left: ", b_size
+				else:
+					b_size = batch_size
+					#print "batches = ", b_size
+
+				for j in range(b_size):
+					batch.append(input_x[batch_size*i + j])
+				self.__batches.append(batch)
+
+		return self.__batches
 		
 	def readlabel(self, filename) :
 		"""
@@ -80,26 +112,19 @@ class Batch :
 				phone = line.split(',')[1].split('\n')[0]
 				self.__labels[idx] = index[phone]
 		return self.__labels
+
 	def indexphone(self,num_of_phones):
 		i=0 
 		with open("phones/48_39.map") as f:
 			for line in f:
 				phone = line.split()
 				if(num_of_phones==48):
-					index_of_phones=[];
-					[ index_of_phones.append(0) for k in range (num_of_phones-1)]
-					index_of_phones.insert(i,1)
-					#self.__indexphone[index_of_phones]=[]
-					self.__indexphone[index_of_phones]=phone[0]
+					self.__indexphone[i]=phone[0]
 				else :
-					index_of_phones=[];
-					[ index_of_phones.append(0) for k in range (num_of_phones-1)]
-					index_of_phones.insert(i,1)
-					#self.__indexphone[index_of_phones]=[]
-					self.__indexphone[index_of_phones]=phone[1]
+					self.__indexphone[i]=phone[1]
 				i +=1
-				#print phones
 		return self.__indexphone
+
 	def phoneindex(self, num_of_phones) :
 		"""
 		mark each phone with index 
@@ -120,7 +145,3 @@ class Batch :
 	   	 			self.__phoneindex[phone[0]].insert(i, 1)
 				i += 1
 		return self.__phoneindex
-
-
-
-

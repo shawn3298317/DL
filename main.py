@@ -22,7 +22,7 @@ def main():
 	
 	# Generating validation set
 	
-	valid_data = batch.readfile("fbank/valid.ark")
+	valid_data = batch.readfile("valid.ark")
 	x_valid_batches, y_valid_batches, y_idx_list = batch.mk_batch(valid_data, 128, 1)
 
 	print "x_batch",len(x_valid_batches),len(x_valid_batches[0])
