@@ -10,6 +10,8 @@ import sys
 import csv
 
 
+
+
 class DNN:
 
 	THRESHOLD = 0
@@ -17,36 +19,21 @@ class DNN:
 	TOTAL_LAYERS = 2 #input layer + hidden layers = 1 + L
 	BATCH_SIZE = 128
 	OUTPUT_WIDTH = 48
-	LAYER_WIDTH = 128
+	LAYER_WIDTH = 512
 	INPUT_WIDTH = 69
-	
+	MOMENTUM = 0.9
 
 	def __init__(self, layer=1):
-		#self.__x_in = []
-		#self.__y_hat = []  #label, target
-		#self.__y_out = []  #output
-		#self.__indexphone = dict()
-		#self.__parameters=[]
-		#self.__gradients=[]
-		#self.__batch = []
-		#b = B.Batch()
-		#self.__label = b.readlabel("label/train.lab") #set the path for the file
-		#self.__indexphone = b.indexphone
+		self.correct = 0
+		b = B.Batch()
+		self.__label = b.readlabel("label/train.lab") #set the path for the file
+		b.indexphone(48)
+		self.__indexphone = b.getIndexPhone()
+
 		#Function model
+		#self.init_multi_layer_model(layer)
 		self.init_model(layer)
 
-		#numpy.set_printoptions(formatter = {'float': '{: 0.3f}'.format}, threshold = 'nan')
-		#print(self.W_matrix[0].get_value())
-		#numpy.set_printoptions(formatter = {'float': '{: 0.3f}'.format}, threshold = 'nan')
-		#print(self.W_matrix[1].get_value())
-
-	def parse_batch(self, raw_x, raw_y):
-		rett = []
-
-		for i in range(len(raw_x)):
-			rett.append(raw_x[i][1:])
-
-		return rett
 
 	def init_model(self, layer): # default 1 hidden layer
 
@@ -55,41 +42,31 @@ class DNN:
 		self.Z_matrix = []# input of ReLU function
 		self.A_matrix = []# output of every layer
 		
-
 		self.add_layer(layer) # add hidden layer
 
 		self.parameters = self.W_matrix + self.B_matrix
-		#self.parameters = [self.w1, self.w2, self.b1, self.b2]
 
 		self.__y_hat = T.matrix()
 		self.cost  = T.sum( (self.A_matrix[-1].T - self.__y_hat) ** 2 ) / DNN.BATCH_SIZE
 		self.gradients = T.grad(self.cost, self.parameters)
-		#print type(self.gradients), type(self.gradients[0])
-		#print "len",len(self.gradients)
-		#print type(self.W_matrix[0])
-		#print type(self.gradients)
-		#print type(self.gradients[0])
-
-
-
+		
+		self.movement = []
+		for p in self.parameters :
+			self.movement.append( theano.shared( numpy.asarray( numpy.zeros(p.get_value().shape) )))
+		
 		# Training function
 		self.train_f = theano.function(
 			inputs = [self.__x_in , self.__y_hat],
-			updates = self.myUpdate(self.parameters, self.gradients),
+			updates = self.myUpdate_mom(self.parameters, self.gradients, self.movement),
+			#updates = self.myUpdate(self.parameters, self.gradients),
 			#allow_input_downcast = True,
-			outputs = [self.Z_matrix[0],self.Z_matrix[1],self.B_matrix[0],self.B_matrix[1],self.A_matrix[0].T,self.A_matrix[-1].T,self.cost])
+			outputs = [self.A_matrix[-1],self.W_matrix[1],self.B_matrix[0],self.B_matrix[1],self.cost])#
 		
 		# Validating function
 		self.valid_f = theano.function(
 			inputs  = [self.__x_in],
 			#allow_input_downcast = True,
 			outputs = self.A_matrix[-1].T)
-
-		# Testing function
-		#self.test_f = theano.function(
-		#	inputs  = [self.__x_in],
-		#	outputs = self.__y_out) 
-
 
 
 	def add_layer(self, layer_cnt):
@@ -100,17 +77,19 @@ class DNN:
 
 		for i in range(layer_cnt+1):
 			if (i == layer_cnt):
-				#w = theano.shared( numpy.asarray(numpy.random.randn(DNN.OUTPUT_WIDTH, DNN.LAYER_WIDTH)) )
-				#b = theano.shared( numpy.asarray(numpy.random.randn(DNN.OUTPUT_WIDTH)) )
 				w = theano.shared( numpy.random.uniform(low = -0.1, high = 0.1, size = (DNN.OUTPUT_WIDTH, DNN.LAYER_WIDTH)) )
 				b = theano.shared( numpy.random.uniform(low = -0.1, high = 0.1, size =  DNN.OUTPUT_WIDTH) )
-			else:
-				#w = theano.shared( numpy.asarray(numpy.random.randn(DNN.LAYER_WIDTH, DNN.INPUT_WIDTH)) )
-				#b = theano.shared( numpy.asarray(numpy.random.randn(DNN.LAYER_WIDTH)) )
+			elif( i == 0):
 				w = theano.shared( numpy.random.uniform(low = -0.1, high = 0.1, size = (DNN.LAYER_WIDTH, DNN.INPUT_WIDTH)) )
 				b = theano.shared( numpy.random.uniform(low = -0.1, high = 0.1, size =  DNN.LAYER_WIDTH) )
+			else:
+				w = theano.shared( numpy.random.uniform(low = -0.1, high = 0.1, size = (DNN.LAYER_WIDTH, DNN.LAYER_WIDTH)) )
+				b = theano.shared( numpy.random.uniform(low = -0.1, high = 0.1, size =  DNN.LAYER_WIDTH) )
+			#print b.get_value()
 			self.W_matrix.append(w)
 			self.B_matrix.append(b)
+
+
 
 		for i in range(layer_cnt +1):
 			if (i == 0):
@@ -118,33 +97,33 @@ class DNN:
 			else: 
 				z = T.dot(self.W_matrix[i], self.A_matrix[i-1]) + self.B_matrix[i].dimshuffle(0,'x')
 
-			a = 1/(1 + T.exp(-z))
+			# ---------Activation function-----------
+			a = T.log(1+T.exp(z)) #Soft Plus
+			#a = 1/(1 + T.exp(-z)) #Sigmoid
 			#a = T.switch(z < 0, 0, z) # ReLU function
+			# ---------------------------------------
 			self.Z_matrix.append(z)
 			self.A_matrix.append(a)
 			
-			#print w.get_value()
 
-			
-			
+	def myUpdate(self, parameters, gradients):
+		parameters_updates = [(p, p-DNN.LEARNING_RATE*g) for p,g in izip(parameters, gradients)]
 
-		#self.__y_out = T.switch(self.Z_matrix[-1] < 0, 0, self.Z_matrix[-1]) #output
-		#self.__y_out = 1/(1 + T.exp(-self.Z_matrix[-1]))
+		return parameters_updates
 
-		#theano.function(inputs = [self.__x_in], outputs = self.__y_out)
-
-
-	def myUpdate(self,parameters,gradients):
-		print "MyUpdate Called.....!!!!!!"
-		parameters_updates = [(p, p - DNN.LEARNING_RATE * g) for p, g in izip(parameters, gradients)]
-
+	def myUpdate_mom(self,parameters,gradients, movement):
+		#print "MyUpdate Called.....!!!!!!"
+		
+		parameters_updates = [(p, p + (DNN.MOMENTUM * v - DNN.LEARNING_RATE * g) ) for p, g, v in izip(parameters, gradients, movement)]
+		parameters_updates += [(v, DNN.MOMENTUM * v - DNN.LEARNING_RATE * g) for g, v in izip(gradients, movement)]
+		
+		
 		#print type(parameters_updates)
 		return parameters_updates
 
 
-	def train(self, raw_batch_x, raw_batch_y):
+	def train(self, raw_batch_x, raw_batch_y, epoch=0):
 		batch = self.parse_batch(raw_batch_x, raw_batch_y)
-		#print "Cost is : %f " % self.train_f(batch, raw_batch_y)
 		
 		return self.train_f(batch, raw_batch_y)
 
@@ -157,8 +136,6 @@ class DNN:
 		y_out = self.valid_f(numpy.asarray(batch))
 
 		correct = 0.0
-		#print y_out[0]
-		#print "shape",len(y_out),",",len(y_out[0])
 		predict = []
 		for i in range(DNN.BATCH_SIZE):
 			index = numpy.argmax(y_out[i])
@@ -166,50 +143,35 @@ class DNN:
 				correct += 1
 			predict.append(index)
 
-
-		print predict[-9:],valid_y[-9:]
-		
-		#print y_out[1]
-		#print y_out[2]
-		#print y_out[3]
-		#print valid_y
-		#valid_result = self.getIndex(self.valid_f(batch)) # result index list
-
+		#print predict[-9:],valid_y[-9:]
 		err_rate = (correct/DNN.BATCH_SIZE)
-		
-
 		return err_rate
 
+	def test(self, x_batch_test):
+		batch = self.parse_batch(x_batch_test)
+		return self.valid_f(batch)
 
-	'''
-	def report_err_rate(self, raw_batch_x, output):
-		max_batch_position = []
-		label_dict = self.__label #dict(name of label) = [array of phones]
-		print "The Id is:",raw_batch_x[1][0]
-		print "The Label is :" ,label_dict[raw_batch_x[1][0]].index(1)
-		print "The Most  is :" ,max((self.transpose(output))[1])
-		correct = 0
-		for i in range(len(output)):
-			max_y_dnn_position = output[i][max(output[i])]
-			if(label_dict[raw_batch_x[i][0]].index(1) == max_y_dnn_position):
-				correct += 1
-		return correct / self.BATCH_SIZE
-		
 	def output_csv(self,raw_batch_x,output):
-		for i in range(len(ouptut)):
+		path = 'output.csv'
+		for i in range(len(output)):
 			with open(path,'a') as csvfile:
 				fieldnames = ["Id","Prediction"]
 				writer=csv.DictWriter(csvfile,fieldnames=fieldnames)
 				#writer.writeheader()
-				writer.writerow({"Id": raw_batch_x[i][0],\
-					             "Prediction": self.__indexphone[max(output[i])]})
+				writer.writerow({"Id": raw_batch_x[i][0],"Prediction": self.__indexphone[ numpy.argmax(output[i])] })
 
-	def output_prediction(self):
-		pass
-	'''
 	"""
 	helper function
 	"""
+
+	def parse_batch(self, raw_x, raw_y=None):
+		rett = []
+
+		for i in range(len(raw_x)):
+			rett.append(raw_x[i][1:])
+
+		return rett
+
 	def transpose(self, matrix):
 		A = T.matrix()
 		A_T = theano.function([A], A.T)
