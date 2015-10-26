@@ -70,7 +70,7 @@ def main():
 			print("\rEpoch %i , Acurracy : %f" % (epoch,accracy))
 
 		if (epoch % 10 ==0):
-			x_test_batches = batch.mk_test_batch(test_data,128)
+			x_test_batches = batch_test.mk_test_batch(test_data,128)
 			for i in range (len(x_test_batches)):
 				y=dnn.test(x_test_batches[i])
 				dnn.output_csv(x_test_batches[i],y,epoch)
