@@ -23,14 +23,14 @@ class Batch :
 		parsing ark file into a set input_x
 		ex. input_x[0] = [ [fadg0_si1279_1], [2.961075, 3.239631, 3.580493, 4.219409, ...] ]
 		"""
+		f=[];
 		with open (filename, 'r') as f :
 			for line in f :
 				words = line.split()
 				line_x = [ words[0] ] + [ float(x) for x in words[1:] ]
 				self.__input_x.append(line_x)
+		f.close()
 		return self.__input_x
-
-
 
 	def mk_batch(self, input_x, batch_size, cmd) :
 		"""
@@ -102,10 +102,7 @@ class Batch :
 				self.__batches.append(batch)
 
 		return self.__batches
-	
-	def getIndexPhone(self):
-		return self.__indexphone
-
+		
 	def readlabel(self, filename) :
 		"""
 		ex. labels[maeb0_si1411_3] = 'sil'

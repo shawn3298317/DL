@@ -2,95 +2,98 @@ import DNN
 import Batch
 import pdb
 import time
-import numpy
-import theano
 import sys
-from tempfile import TemporaryFile
+import numpy
 
 def my_print(i,cost):
-	sys.stdout.write("\rBatch: %i , Cost: %f" % (i,cost) )
+	sys.stdout.write("\rBatch %i , Cost : %f" % (i,cost))
 	sys.stdout.flush()
 
 def main():
-	batch = Batch.Batch()
-	dnn = DNN.DNN(2)
+	batch_train = Batch.Batch()
+	batch_valid = Batch.Batch()
+	batch_test  = Batch.Batch()
+	dnn = DNN.DNN()
 
-
-
-	record = []
 
 	# Generating training batch
-	train_data = batch.readfile("fbank/valid.ark")        #all the training data
-	batch.readlabel("label/train.lab")
-	batch.phoneindex(48)
-	x_batches, y_batches = batch.mk_batch(train_data, 128, 0) #transform data into minibatch
+	
+	train_data = batch_train.readfile("fbank/normal_train.ark")        #all the training data
+	batch_train.readlabel("label/train.lab")
+	batch_train.phoneindex(48)
+	x_batches, y_batches = batch_train.mk_batch(train_data, 128, 0) #transform data into minibatch
 	
 	# Generating validation set
-	valid_data = batch.readfile("fbank/valid.ark")
-	x_valid_batches, y_valid_batches, y_idx_list = batch.mk_batch(valid_data, 128, 1)
+	
+	valid_data = batch_valid.readfile("fbank/normal_valid.ark")
+	batch_valid.readlabel("label/train.lab")
+	x_valid_batches, y_valid_batches, y_idx_list = batch_valid.mk_batch(valid_data, 128, 1)
+	#print y_idx_list
+	test_data = batch_test.readfile("fbank/normal_test.ark")
+	x_test_batches = batch_test.mk_test_batch(test_data,128)
+	print "The length is :"
+	print (len(x_test_batches))
+	#print x_valid_batches[0]
 
 	MAX_EPOCH = 100
-	cur_model = []
 
-	cmd = raw_input("Keep Training?")
-	
 
-	while( 1 ):
-		
-		if(cmd[0] == "y"):
 
-			#Training
-			epoch = 0
-			while(epoch < MAX_EPOCH):
-				batch_cnt = 0
-				over_all_cost = 0.0
-				#Train epoch
-				epoch += 1
-				for i in range(len(x_batches)):#range(2):
+	"""training"""
+	start_time = time.time()
+	epoch = 0
+	while(epoch < MAX_EPOCH):
+		batch_cnt = 0
+		#for i in range(10):
+		for i in range(len(x_batches)):
+			assert (len(x_batches[i]) == len(y_batches[i])),"X batches and Y batches length unmatch!"
+			#print "Batch ", batch_cnt
+			#pdb.set_trace()
+			#print train_batch
+			#dnn.feedforward(x_batches[i], y_batches[i])
+			cost = dnn.train(x_batches[i], y_batches[i])
+			#print cost
+			my_print(i,cost)
+			#print "a batch down"
+			#dnn.calculate_error()
+			#dnn.backpropagation()
+			#dnn.update()
+			batch_cnt += 1
+		epoch += 1
 
-					w0,w1,b0,b1,cost = dnn.train(x_batches[i], y_batches[i])
-					over_all_cost += cost
-					batch_cnt += 1
-					my_print(i,cost)
-					#print cost
-					#my_print((float(i)+1)/len(x_batches))
-					if ((i == (len(x_batches)-1) ) and (epoch == MAX_EPOCH)):
-						#print "Saving current result"
-						cur_model = [w0,w1,b0,b1]
-				
-				
-				#Validate epoch
-				over_all_acc = 0.0
-				for i in range(len(x_valid_batches)):
-					err_rate = dnn.validate(x_valid_batches[i], y_idx_list[i])
-					over_all_acc += err_rate
+		if(epoch % 10 == 0):
+			correct_pridiction = 0.0
+			for i in range(len(x_valid_batches)):
+				correct_pridiction += dnn.validate(x_valid_batches[i], y_idx_list[i])
 
-				print "\rEpoch %i Average_Cost: %f ACC: %f" % (epoch, over_all_cost/len(x_batches), over_all_acc/len(x_valid_batches))
+			accracy = correct_pridiction/(len(x_valid_batches)*dnn.BATCH_SIZE)
+			print("\rEpoch %i , Acurracy : %f" % (epoch,accracy))
 
-				record.append([over_all_cost/len(x_batches), over_all_acc/len(x_valid_batches)])
-			#end of while
-
-		else:
-			#Testing
-			
-			test_data = batch.readfile("fbank/normal_test_test.ark") #all the test data
-			x_test_batches = batch.mk_test_batch(test_data, 128)   #transform data into minibatch
-
+		if (epoch % 10 ==0):
+			x_test_batches = batch.mk_test_batch(test_data,128)
 			for i in range (len(x_test_batches)):
-				y = dnn.test(x_test_batches[i])
-				dnn.output_csv(x_test_batches[i], y)
-			
-			outfile = TemporaryFile()
-			if (len(cur_model) == 4):
-				print "Saving current model to src/Branch_factory/WB_value_3.npz"
-				numpy.savez('src/Branch_factory/WB_value_3', w0 = cur_model[0], w1 = cur_model[1], b0 = cur_model[2], b1 = cur_model[3])
-			else:
-				print len(cur_model)
-			return
-		#end of else
+				y=dnn.test(x_test_batches[i])
+				dnn.output_csv(x_test_batches[i],y,epoch)
+			print("\rEpoch %i , output%i.csv produced...."%(epoch,epoch))
+	print("finish")
 
-		cmd = raw_input("Keep Training?")
-	#end of while		
 	
+
+	"""testing for the training result"""
+	#test_data = batchestch.readfile("fbank/normal_test.ark") #all the test data
+	#x_test_batches = batch.mk_test_batch(test_data, 128)   #transform data into minibatch
+	#batch_cnt = 0
+	#print len(x_test_batches)
+	#for i in range (len(x_test_batches)):
+		#y = dnn.test(x_test_batches[i])
+	#	print "Batch_test",batch_cnt
+	#	output = dnn.test(x_test_batches[i],y_batches_test[i])
+	#	print "index of output",len(output)
+	#	print "length of output",len(output[0])
+	#	print output
+	#	print "The Error rate ",dnn.report_err_rate(x_batchse_test[i],output)
+		#dnn.output_csv(x_test_batches[i], y)		
+	#	batch_cnt+=1
+
 if __name__ == '__main__':
 	main()
