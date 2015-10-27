@@ -253,7 +253,6 @@ class DNN:
 				#writer.writeheader()
 				writer.writerow({"Id": raw_batch_x[i][0],\
 					             "Prediction": self.__indexphone[numpy.argmax(output[i])]})
-
 	"""
 	helper function
 	"""

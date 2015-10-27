@@ -1,4 +1,5 @@
 import random
+import sys
 """
 ussage :
 b = Batch()
@@ -74,7 +75,59 @@ class Batch :
 			return self.__batches, self.__y_hat, self.__batch_index
 
 		return self.__batches, self.__y_hat, self.__batch_index
-
+	def append_surrounding_data(self,input_x,size) :
+		"""
+		return input with surrounding data
+		ex. new_input[i] = [ input_x[i].ID , input_x[i-0.5*size]+....+input_x[i+0.5*size] ]
+		"""
+		self.__batches =[]
+		nametag =''
+		tmp_group =[]
+		intag = False
+		counter = 0
+		for i in range(len(input_x)):
+			if (intag):
+				if (input_x[i][0].split('_')[0]+input_x[i][0].split('_')[1] == nametag) :
+					tmp_group.append(input_x[i])
+					counter=counter+1
+				else :
+					self.__batches.append(tmp_group)
+					tmp_group=[]
+					intag = False
+			if not (intag):
+				nametag = input_x[i][0].split('_')[0]+input_x[i][0].split('_')[1]
+				#print "Have "+ str(counter) +" item"
+				#print "name set tag to :"+nametag
+				counter = 0
+				intag =True 
+				i=i-1
+		#for j in range (len(input_x)/batch_size)
+		new_input =[]
+		print len(self.__batches)
+		print len(self.__batches[0])
+		for i in range(len(self.__batches)):
+			""
+			for x in range(len(self.__batches[i])):
+				tmp_item = []
+				tmp_list = []
+				tmp_item.append(self.__batches[i][x][0])
+				for index in range(size) :
+					if(x-(size-1)/2+index <0 or x-(size-1)+index>len(self.__batches[i])-1):
+						#print(x-4+index)
+						#tmp_item.append(self.__batches[i][x][1:])
+						tmp_list+=self.__batches[i][x][1:]
+					else :
+						#print(x-4+index)
+						#tmp_item.append(self.__batches[i][x-4+index][1:])
+						tmp_list+=self.__batches[i][x-(size-1)+index][1:]
+				tmp_item.append(tmp_list)
+				new_input.append(tmp_item)
+		#random.shuffle(batch)
+		print len(tmp_item)
+		print tmp_item[0]
+		print len(tmp_item[1])
+		return new_input
+		#batch = []
 	def mk_test_batch(self, input_x, batch_size) :
 		self.__batches = []
 
@@ -117,15 +170,23 @@ class Batch :
 
 	def indexphone(self,num_of_phones):
 		i=0 
-		with open("phones/48_39.map") as f:
-			for line in f:
-				phone = line.split()
-				if(num_of_phones==48):
-					self.__indexphone[i]=phone[0]
-				else :
-					self.__indexphone[i]=phone[1]
-				i +=1
-		return self.__indexphone
+		if (num_of_phones == 48 or num_of_phones==39):
+			with open("phones/48_39.map") as f:
+				for line in f:
+					phone = line.split()
+					if(num_of_phones==48):
+						self.__indexphone[i]=phone[0]
+					else :
+						self.__indexphone[i]=phone[1]
+					i +=1
+			return self.__indexphone
+		else :
+			with open("phones/state_48_39.map") as f:
+				for line in f:
+					phone =line.split()
+					self.__indexphone[i]=phone[2]
+					i+=1
+			return self.__indexphone
 
 	def phoneindex(self, num_of_phones) :
 		"""
