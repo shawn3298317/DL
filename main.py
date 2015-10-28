@@ -29,7 +29,7 @@ def main():
 
 	print "x_batch",len(x_valid_batches),len(x_valid_batches[0])
 	print "y_list",len(y_idx_list),len(y_idx_list[0])
-	MAX_EPOCH = 100
+	MAX_EPOCH = 300
 
 
 
@@ -115,20 +115,20 @@ def main():
 	
 
 	"""testing for the training result"""
-	#test_data = batch.readfile("../fbank/test.ark") #all the test data
-	#test_batches = batch.minibatch(train_data, 10)   #transform data into minibatch
-	'''
-	batch_cnt=0	
-	for i in range (len(x_batches_test)):
-		print "Batch_test",batch_cnt
-		output = dnn.test(x_batches_test[i],y_batches_test[i])
-		#print "index of output",len(output)
-		#print "length of output",len(output[0])
-		#print output
-		##print "The Error rate ",dnn.report_err_rate(x_batchse_test[i],output)
-		dnn.output_csv(x_batches_test[i],output)		
-		batch_cnt+=1
-	'''
+	test_data = batch.readfile("fbank/test.ark") #all the test data
+	x_test_batches = batch.mk_test_batch(test_data, 128)   #transform data into minibatch
+	batch_cnt = 0
+	#print len(x_test_batches)
+	for i in range (len(x_test_batches)):
+		y = dnn.test(x_test_batches[i])
+	#	print "Batch_test",batch_cnt
+	#	output = dnn.test(x_test_batches[i],y_batches_test[i])
+	#	print "index of output",len(output)
+	#	print "length of output",len(output[0])
+	#	print output
+	#	print "The Error rate ",dnn.report_err_rate(x_batchse_test[i],output)
+		dnn.output_csv(x_test_batches[i], y)		
+	#	batch_cnt+=1
 
 if __name__ == '__main__':
 	main()

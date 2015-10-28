@@ -83,23 +83,14 @@ class Batch :
 		return self.__labels
 	def indexphone(self,num_of_phones):
 		i=0 
-		with open("../phones/48_39.map") as f:
+		with open("phones/48_39.map") as f:
 			for line in f:
 				phone = line.split()
 				if(num_of_phones==48):
-					index_of_phones=[];
-					[ index_of_phones.append(0) for k in range (num_of_phones-1)]
-					index_of_phones.insert(i,1)
-					#self.__indexphone[index_of_phones]=[]
-					self.__indexphone[index_of_phones]=phone[0]
+					self.__indexphone[i]=phone[0]
 				else :
-					index_of_phones=[];
-					[ index_of_phones.append(0) for k in range (num_of_phones-1)]
-					index_of_phones.insert(i,1)
-					#self.__indexphone[index_of_phones]=[]
-					self.__indexphone[index_of_phones]=phone[1]
+					self.__indexphone[i]=phone[1]
 				i +=1
-				#print phones
 		return self.__indexphone
 	def phoneindex(self, num_of_phones) :
 		"""

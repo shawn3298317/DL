@@ -65,6 +65,7 @@ class DNN:
 		self.__y_hat = T.matrix()
 		self.__y_softmax = T.exp(self.A_matrix[-1].T) / T.sum( T.exp(self.A_matrix[-1]), axis = 1 )
 		self.cost = T.sum( (self.__y_hat * -T.log(self.__y_softmax)) ) / DNN.BATCH_SIZE
+		#self.cost = T.sum((self.A_matrix[-1].T - self.__y_hat) ** 2) / DNN.BATCH_SIZE
 		self.gradients = T.grad(self.cost, self.parameters)
 		#print type(self.gradients), type(self.gradients[0])
 		#print "len",len(self.gradients)
@@ -199,7 +200,7 @@ class DNN:
 			if(label_dict[raw_batch_x[i][0]].index(1) == max_y_dnn_position):
 				correct += 1
 		return correct / self.BATCH_SIZE
-		
+	'''
 	def output_csv(self,raw_batch_x,output):
 		for i in range(len(ouptut)):
 			with open(path,'a') as csvfile:
@@ -207,11 +208,11 @@ class DNN:
 				writer=csv.DictWriter(csvfile,fieldnames=fieldnames)
 				#writer.writeheader()
 				writer.writerow({"Id": raw_batch_x[i][0],\
-					             "Prediction": self.__indexphone[max(output[i])]})
+					             "Prediction": self.__indexphone[numpy.argmax(output[i])]})
 
 	def output_prediction(self):
 		pass
-	'''
+	
 	"""
 	helper function
 	"""
@@ -233,6 +234,10 @@ class DNN:
 			predict.append(idx)
 
 		return predict
+
+	def test(self, x_batch_test):
+		batch = self.parse_batch(x_batch_test)
+		return self.valid_f(batch)
 
 
 	def __str__(self):
