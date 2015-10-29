@@ -16,9 +16,9 @@ class DNN:
 	LEARNING_RATE = 0.001
 	TOTAL_LAYERS = 3 #input layer + hidden layers = 1 + L
 	BATCH_SIZE = 128
-	OUTPUT_WIDTH = 48
-	LAYER_WIDTH = 128
-	INPUT_WIDTH = 69
+	OUTPUT_WIDTH = 1943
+	LAYER_WIDTH = 1024
+	INPUT_WIDTH = 621
 	MOMENTUM = 0.9
 	
 
@@ -32,7 +32,7 @@ class DNN:
 		#self.__gradients=[]
 		#self.__batch = []
 		b = B.Batch()
-		self.__label = b.readlabel("label/train.lab") #set the path for the file
+		self.__label = b.readlabel("state_label/train.lab") #set the path for the file
 		self.__indexphone = b.indexphone(48)
 		#Function model
 		self.init_model(layer)
@@ -124,12 +124,14 @@ class DNN:
 		x = T.matrix(dtype='float32')
 		x_T = x.T
 
+		##1024 * 692
 		w1 = theano.shared(numpy.random.uniform(low = -0.1, high = 0.1, size =(DNN.LAYER_WIDTH, DNN.INPUT_WIDTH)).astype(dtype='float32'))
 		b1 = theano.shared(numpy.random.uniform(low = -0.1, high = 0.1, size =(DNN.LAYER_WIDTH)).astype(dtype='float32'))
 
+		##1024*1024
 		w2 = theano.shared(numpy.random.uniform(low = -0.1, high = 0.1, size =(DNN.LAYER_WIDTH, DNN.LAYER_WIDTH)).astype(dtype='float32'))
 		b2 = theano.shared(numpy.random.uniform(low = -0.1, high = 0.1, size =(DNN.LAYER_WIDTH)).astype(dtype='float32'))
-
+		#1943*1024
 		w3 = theano.shared(numpy.random.uniform(low = -0.1, high = 0.1, size =(DNN.OUTPUT_WIDTH, DNN.LAYER_WIDTH)).astype(dtype='float32'))
 		b3 = theano.shared(numpy.random.uniform(low = -0.1, high = 0.1, size =(DNN.OUTPUT_WIDTH)).astype(dtype='float32'))
 

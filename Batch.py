@@ -85,47 +85,65 @@ class Batch :
 		tmp_group =[]
 		intag = False
 		counter = 0
+		make_counter =0
+		gp_counter=0
+		#print "The length of input_x is: ", len(input_x)
 		for i in range(len(input_x)):
 			if (intag):
 				if (input_x[i][0].split('_')[0]+input_x[i][0].split('_')[1] == nametag) :
 					tmp_group.append(input_x[i])
-					counter=counter+1
+					make_counter+=1
 				else :
-					self.__batches.append(tmp_group)
-					tmp_group=[]
-					intag = False
+					intag = False	
 			if not (intag):
 				nametag = input_x[i][0].split('_')[0]+input_x[i][0].split('_')[1]
+				self.__batches.append(tmp_group)
+				gp_counter+=len(tmp_group)
+				if not (gp_counter == make_counter):
+						print "At the index of",i
+				assert (gp_counter == make_counter),"gp_counter & make_counter is not fucking mk_match at"
+				tmp_group=[]
+				
+				tmp_group.append(input_x[i])
 				#print "Have "+ str(counter) +" item"
 				#print "name set tag to :"+nametag
-				counter = 0
 				intag =True 
-				i=i-1
+				make_counter+=1
 		#for j in range (len(input_x)/batch_size)
+		self.__batches.append(tmp_group)
 		new_input =[]
-		print len(self.__batches)
-		print len(self.__batches[0])
+		counter =0
+		#for i in range(len(self.__batches)):
+		#	counter+=len(self.__batches[i])
+		#print "The length of __batches total is: " , counter
+		#print "The num of make_counter  is: " , make_counter
+		#print "The num of gp_counter 	is :" , gp_counter
+		#	print self.__batches[1][i][0];
+		#print len(self.__batches)
+		#print len(self.__batches[0])
 		for i in range(len(self.__batches)):
-			""
 			for x in range(len(self.__batches[i])):
 				tmp_item = []
 				tmp_list = []
 				tmp_item.append(self.__batches[i][x][0])
 				for index in range(size) :
-					if(x-(size-1)/2+index <0 or x-(size-1)+index>len(self.__batches[i])-1):
+					if(x-(size-1)/2+index <0 or x-(size-1)/2+index>len(self.__batches[i])-1):
 						#print(x-4+index)
+						if(x-(size-1)/2+index<0) :
+							tmp_list+=self.__batches[i][0][1:]
+						if(x-(size-1)/2+index>len(self.__batches[i])-1):
+							tmp_list+=self.__batches[i][len(self.__batches[i])-1]
 						#tmp_item.append(self.__batches[i][x][1:])
-						tmp_list+=self.__batches[i][x][1:]
 					else :
 						#print(x-4+index)
 						#tmp_item.append(self.__batches[i][x-4+index][1:])
-						tmp_list+=self.__batches[i][x-(size-1)+index][1:]
-				tmp_item.append(tmp_list)
+						tmp_list+=self.__batches[i][x-(size-1)/2+index][1:]
+				tmp_item+=tmp_list
 				new_input.append(tmp_item)
 		#random.shuffle(batch)
-		print len(tmp_item)
-		print tmp_item[0]
-		print len(tmp_item[1])
+		#print len(tmp_item)
+		#print tmp_item[0]
+		#print len(tmp_item[1])
 		return new_input
 		#batch = []
 	def mk_test_batch(self, input_x, batch_size) :
@@ -156,16 +174,29 @@ class Batch :
 
 		return self.__batches
 		
+	
+
 	def readlabel(self, filename) :
 		"""
 		ex. labels[maeb0_si1411_3] = 'sil'
+
+		or for state :
+
+			labels[maeb0_si1411_3] = 970
 		"""
-		index = self.phoneindex(48)
+		self.__labels=dict()
+		self.__phoneindex=self.stateindex()
+		#print self.__phoneindex[0]
+		index = self.__phoneindex
+		#print index[0]
 		with open (filename, 'r') as f :
 			for line in f :
+				#print line
 				idx   = line.split(',')[0]
+				#print "idx is: ",type(idx)
 				phone = line.split(',')[1].split('\n')[0]
-				self.__labels[idx] = index[phone]
+				#print "phone is : ",type(int(phone))
+				self.__labels[idx] = index[int(phone)]
 		return self.__labels
 
 	def indexphone(self,num_of_phones):
@@ -188,6 +219,17 @@ class Batch :
 					i+=1
 			return self.__indexphone
 
+	def stateindex(self):
+		"""
+		make the state dict from index to array
+		ex, self__phoneindex[0]=[1,0,0......]
+		"""
+		for i in range(1943):
+			self.__phoneindex[i]=[]
+			[self.__phoneindex[i].append(0) for k in range(1943-1)]
+			self.__phoneindex[i].insert(i,1)
+
+		return self.__phoneindex
 	def phoneindex(self, num_of_phones) :
 		"""
 		mark each phone with index 
