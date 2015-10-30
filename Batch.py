@@ -9,7 +9,7 @@ b.phoneindex(48)
 d = b.mk_batch(c, 5)
 """
 class Batch :
-
+	
 	def __init__(self) :
 		self.__input_x = []
 		self.__y_hat = []
@@ -38,10 +38,15 @@ class Batch :
 		return batches with demanded batch_size
 		ex. batches[0] = [ input_x[0] : input[0 + batch_size] ]
 		"""
+		print "In mk_batch","len of input_x    = ",len(input_x)
+		print "In mk_batch","len of input_x[0] = ",len(input_x)
+		for i in range(len(input_x)):
+			if not(len(input_x[i])==len(input_x[0])) :
+				print "In mk_batch, The ",i," Input is sized :",len(input_x[i])
 		self.__batches = []
 		self.__y_hat = []
 		self.__batch_index = []
-		random.shuffle(input_x)
+		#random.shuffle(input_x)
 		if(len(input_x) % batch_size) == 0 : 
 			for i in range(len(input_x) / batch_size) :
 				batch = []
@@ -132,7 +137,7 @@ class Batch :
 						if(x-(size-1)/2+index<0) :
 							tmp_list+=self.__batches[i][0][1:]
 						if(x-(size-1)/2+index>len(self.__batches[i])-1):
-							tmp_list+=self.__batches[i][len(self.__batches[i])-1]
+							tmp_list+=self.__batches[i][len(self.__batches[i])-1][1:]
 						#tmp_item.append(self.__batches[i][x][1:])
 					else :
 						#print(x-4+index)

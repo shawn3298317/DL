@@ -34,9 +34,7 @@ def main():
 	
 	batch_train.indexphone(0)
 	x_batches, y_batches = batch_train.mk_batch(train_data, 128, 0) #transform data into minibatch
-	print "=====These are batches====="
-	#print x_batches[0]
-	print "=====These are batches====="
+	
 	# Generating validation set
 	
 	valid_data = batch_valid.readfile("fbank/normal_valid.ark")
@@ -53,6 +51,7 @@ def main():
 
 	MAX_EPOCH = 100
 
+	
 
 
 	#"""training"""
@@ -64,13 +63,22 @@ def main():
 		#for i in range(10):
 		for i in range(len(x_batches)):
 			assert (len(x_batches[i]) == len(y_batches[i])),"X batches and Y batches length unmatch!"
-			print (len(y_batches))
-			print (len(y_batches[0]))
-			print (len(y_batches[0][0]))
+			#print (len(y_batches))
+			#print (len(y_batches[0]))
+			#print (len(y_batches[0][0]))
+			"""
+			print "\n=====These are x batches====="
+			print x_batches[i]
+			print "=====These are x batches=====\n"
+
+			print "\n=====These are y batches====="
+			print y_batches[i]
+			print "=====These are y batches=====\n"
+			"""
 			cost = dnn.train(x_batches[i], y_batches[i])
 			my_print(i,cost)
 		epoch += 1
-
+		
 		if(epoch % 10 == 0):
 			correct_pridiction = 0.0
 			for i in range(len(x_valid_batches)):
@@ -84,6 +92,7 @@ def main():
 				y=dnn.test(x_test_batches[i])
 				dnn.output_csv(x_test_batches[i],y,epoch)
 			print("\rEpoch %i , output%i.csv produced...."%(epoch,epoch))
+		
 	print("======finish training=====")
 
 	

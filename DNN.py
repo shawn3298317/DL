@@ -46,7 +46,7 @@ class DNN:
 
 		for i in range(len(raw_x)):
 			rett.append(raw_x[i][1:])
-
+		#print rett[0];
 		return rett
 
 	
